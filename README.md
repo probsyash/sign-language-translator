@@ -3,7 +3,7 @@
 Real-time American Sign Language (ASL) finger-spelling recognition using MediaPipe hand tracking and a Random Forest classifier. Detected signs are typed directly into any active application via simulated keypresses.
 
 ## Demo
-![Demo](/gif_IGNORE/demo.gif)
+![Demo](/gif_IGNORE/DEMO.gif)
 
 ## How it works
 1. MediaPipe detects 21 hand landmarks per frame via webcam

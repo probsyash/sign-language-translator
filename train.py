@@ -23,7 +23,7 @@ while True:
     y_data.append(coords[-1]) # Last element is the label
 
 x_train, x_test, y_train, y_test = train_test_split(
-    x_data, y_data, test_size=0.2, random_state=42)
+    x_data, y_data, test_size=0.2, random_state=42, stratify=y_data)
 
 classifier.fit(x_train, y_train)
 
@@ -35,5 +35,11 @@ confusion_matrix(y_test, y_pred)
 print("Accuracy:", accuracy_score(y_test, y_pred))
 print("Classification Report:\n", classification_report(y_test, y_pred))    
 print("Confusion Matrix:\n", confusion_matrix(y_test, y_pred))
+
+with open("dataStorage/metrics.txt", "w") as f:
+    f.write(f"Accuracy: {accuracy_score(y_test, y_pred)}\n")
+    f.write(classification_report(y_test, y_pred))
+    
+print(f"Training on {len(x_train)} samples, testing on {len(x_test)}")
 
 joblib.dump(classifier, "dataStorage/hand_sign_classifier.pkl")

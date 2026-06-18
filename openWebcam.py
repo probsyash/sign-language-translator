@@ -3,9 +3,12 @@ import mediapipe as mp
 from mediapipe.tasks import python
 from mediapipe.tasks.python import vision
 import time
+import joblib
 
 recording = False
 current_label = None
+predicted_letter = None
+classifier = joblib.load("dataStorage/hand_sign_classifier.pkl")  # Load the trained classifier
 
 # Connections for drawing hand landmarks
 HAND_CONNECTIONS = [
@@ -19,9 +22,6 @@ HAND_CONNECTIONS = [
 
 # Open the default camera
 cam = cv2.VideoCapture(0)
-
-# Initialize the MediaPipe gesture recognizer
-model_path = 'model_path/hand_landmarker.task'
 
 # Set up the MediaPipe gesture recognizer
 BaseOptions = mp.tasks.BaseOptions
@@ -47,9 +47,9 @@ with HandLandmarker.create_from_options(options) as landmarker:
     while True:
         key = cv2.waitKey(1)
 
-        if key == ord('r'):
+        if key == ord('1'):
             recording = not recording
-        elif key == ord('q'):
+        elif key == ord('2'):
             break
         elif key != -1 and key < 128 and chr(key).isalpha():
             current_label = chr(key)
@@ -66,22 +66,21 @@ with HandLandmarker.create_from_options(options) as landmarker:
         if latest_result:
             # Landmark drawer
             for hand_landmarks in latest_result.hand_landmarks:
-                coords = []
+                row = []  # flat list of x, y, x, y, ... for this frame
                 # Draw circles for each landmark
                 for landmark in hand_landmarks:
                     x = int(landmark.x * frame.shape[1])
                     y = int(landmark.y * frame.shape[0])
                     cv2.circle(frame, (x, y), 5, (0, 255, 0), -1)
-                    if recording and current_label is not None:
-                        coords.append((landmark.x, landmark.y))
+                    row.append(landmark.x)
+                    row.append(landmark.y)
 
-                # Write all coords for this frame as one row
-                if coords:
-                    for i in range(len(coords)):
-                        if i == len(coords) - 1:
-                            file.write(str(coords[i][0]) + "," + str(coords[i][1]) + "," + current_label + "\n")
-                        else:
-                            file.write(str(coords[i][0]) + "," + str(coords[i][1]) + ",")
+                # Write to file only when recording
+                if recording and current_label is not None:
+                    file.write(",".join(str(v) for v in row) + "," + current_label + "\n")
+
+                # Predict continuously every frame
+                predicted_letter = classifier.predict([row])[0]
 
                 # Draw lines between connected landmarks
                 for start_index, end_index in HAND_CONNECTIONS:
@@ -93,8 +92,9 @@ with HandLandmarker.create_from_options(options) as landmarker:
                     y2 = int(end_landmark.y * frame.shape[0])
                     cv2.line(frame, (x1, y1), (x2, y2), (0, 0, 255), 2)
 
-        # Display label and recording status on screen
+        # Display label, recording status, and prediction on screen
         cv2.putText(frame, f"Label: {current_label} | Recording: {recording}", (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
+        cv2.putText(frame, f"Prediction: {predicted_letter}", (10, 70), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 0, 0), 2)
 
         # Display the captured frame
         cv2.imshow('Camera', frame)

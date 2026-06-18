@@ -2,6 +2,7 @@ import numpy as np
 from sklearn.model_selection import train_test_split
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import accuracy_score, classification_report, confusion_matrix
+import joblib
 
 classifier = RandomForestClassifier(n_estimators=100, random_state=42)
 
@@ -34,3 +35,5 @@ confusion_matrix(y_test, y_pred)
 print("Accuracy:", accuracy_score(y_test, y_pred))
 print("Classification Report:\n", classification_report(y_test, y_pred))    
 print("Confusion Matrix:\n", confusion_matrix(y_test, y_pred))
+
+joblib.dump(classifier, "dataStorage/hand_sign_classifier.pkl")
